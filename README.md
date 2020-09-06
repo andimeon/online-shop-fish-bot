@@ -4,7 +4,7 @@ A Telegram bot provides access to the fish-shop. You can choose a fish, get a de
 
 ## Enviroment settings
 
-The bot uses following environment variables:
+Create enviroment variables in the `.env` file:
 
 `CLIENT_ID` - client_id key access to Elasticpath shop API (getting in Elasticpath dashboard).
 
@@ -19,6 +19,12 @@ The bot uses following environment variables:
 `DATABASE_PORT` - Redislab database port.
 
 ## Getting Started
+
+Create store in [Elasticpath](https://www.elasticpath.com/)
+
+Create Redis online database in [Redislab](https://redislabs.com/)
+
+Create Telegram bot.
 
 Clone repository and install the required Python dependencies:
 
