@@ -95,7 +95,6 @@ def handle_cart(bot, update):
                            message_id=query.message.message_id)
 
         product_id = query.data.split(',')[1]
-        print(product_id)
         remove_cart_items(client_id=client_id, 
                           product_id=product_id, 
                           chat_id=chat_id)
@@ -154,7 +153,7 @@ def handle_user(bot, update):
     update.message.reply_text('Thank you for order. We will be contanting you soon',
                               reply_markup=reply_markup)
 
-    return 'HANDLE_USER'
+    return 'HANDLE_MENU'
 
 
 def handle_users_reply(bot, update):
