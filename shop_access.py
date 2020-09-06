@@ -1,16 +1,5 @@
 import requests
-import logging
 import json
-
-from environs import Env
-
-env = Env()
-env.read_env()
-
-client_id = env('CLIENT_ID')
-client_secret = env('CLIENT_SECRET_TOKEN')
-
-logging.basicConfig(format="%(process)d %(levelname)s %(message)s", level=logging.WARNING)
 
 
 def _get_access_token(client_id, client_secret):
@@ -124,8 +113,7 @@ def get_product_by_id(client_id, product_id):
 
     response = requests.get(url, headers=headers)
     response.raise_for_status()
-
-    product= response.json()['data']
+    product = response.json()['data']
 
     return {
         'name' : product['name'],
@@ -192,7 +180,9 @@ def get_customer(client_id, client_secret, customer_id):
         'Authorization': access_token,
     }
 
-    response = requests.get(f'https://api.moltin.com/v2/customers/{customer_id}', headers=headers)
+    url = f'https://api.moltin.com/v2/customers/{customer_id}'
+
+    response = requests.get(url, headers=headers)
     response.raise_for_status()
 
-    print(response.json())
+    return response.json()
