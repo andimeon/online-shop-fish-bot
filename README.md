@@ -20,9 +20,9 @@ Create enviroment variables in the `.env` file:
 
 ## Getting Started
 
-Create store in [Elasticpath](https://www.elasticpath.com/)
+Create store in [Elasticpath](https://www.elasticpath.com/).
 
-Create Redis online database in [Redislab](https://redislabs.com/)
+Create Redis online database in [Redislab](https://redislabs.com/).
 
 Create Telegram bot.
 
