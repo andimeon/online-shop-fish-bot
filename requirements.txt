@@ -1,0 +1,5 @@
+email_validator==1.1.1
+redis==3.2.1
+environs==8.0.0
+python_telegram_bot==11.1.0
+requests==2.24.0
