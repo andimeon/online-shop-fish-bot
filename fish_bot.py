@@ -28,10 +28,7 @@ client_secret = env('CLIENT_SECRET_TOKEN')
 def start(bot, update):
     check_bearer_token()
     products = get_products_list(bearer_token=bearer_token)
-
-    products_keyboard = [[InlineKeyboardButton(product['name'], callback_data=product['id'])] for product in products]
-    products_keyboard.append([InlineKeyboardButton('Cart', callback_data='cart')])
-    reply_markup = InlineKeyboardMarkup(products_keyboard)
+    reply_markup = get_menu_keyboard(products)
     update.message.reply_text('Please choose:', reply_markup=reply_markup)
     return 'HANDLE_MENU'
 
@@ -41,26 +38,24 @@ def handle_menu(bot, update):
 
     query = update.callback_query
     chat_id = query.message.chat_id
-    bot.delete_message(chat_id=chat_id, message_id=query.message.message_id)
 
     if query.data == 'menu':
         products = get_products_list(bearer_token=bearer_token)
-
-        products_keyboard = [[InlineKeyboardButton(product['name'], callback_data=product['id'])] for product in products]
-        products_keyboard.append([InlineKeyboardButton('Cart', callback_data='cart')])
-        reply_markup = InlineKeyboardMarkup(products_keyboard)
+        reply_markup = get_menu_keyboard(products)
         bot.send_message(chat_id=chat_id, text='Please choose:', reply_markup=reply_markup)
-
+        bot.delete_message(chat_id=chat_id, message_id=query.message.message_id)
         return 'HANDLE_MENU'
 
     product_id = query.data
     product = get_product_by_id(bearer_token=bearer_token, product_id=product_id)
 
     measures = ['1', '2', '5']
-    product_keyboard = [[InlineKeyboardButton(f'{weight} kg', callback_data=f'{weight},{product_id}') for weight in measures],
-                        [InlineKeyboardButton('Cart', callback_data='cart')],
-                        [InlineKeyboardButton('Menu', callback_data='menu')],
-                        [InlineKeyboardButton('Payment', callback_data='payment')]]
+    product_keyboard = [
+        [InlineKeyboardButton(f'{weight} kg', callback_data=f'{weight},{product_id}') for weight in measures],
+        [InlineKeyboardButton('Cart', callback_data='cart')],
+        [InlineKeyboardButton('Menu', callback_data='menu')],
+        [InlineKeyboardButton('Payment', callback_data='payment')]
+        ]
     reply_markup = InlineKeyboardMarkup(product_keyboard)
 
     message = dedent(f'''
@@ -74,6 +69,7 @@ def handle_menu(bot, update):
 
     bot.send_photo(chat_id=chat_id, photo=product['image_url'],
                    caption=message, reply_markup=reply_markup)
+    bot.delete_message(chat_id=chat_id, message_id=query.message.message_id)
 
     return 'HANDLE_DESCRIPTION'
 
@@ -100,9 +96,6 @@ def handle_cart(bot, update):
     chat_id = query.message.chat_id
 
     if 'remove' in query.data:
-        bot.delete_message(chat_id=query.message.chat_id, 
-                           message_id=query.message.message_id)
-
         product_id = query.data.split(',')[1]
         remove_cart_items(bearer_token=bearer_token, 
                           product_id=product_id, 
@@ -129,7 +122,12 @@ def handle_cart(bot, update):
     cart_keyboard.append([InlineKeyboardButton('Payment', callback_data='payment')])
     reply_markup = InlineKeyboardMarkup(cart_keyboard)
     message += f'\nTotal: {total_amount}'
-    bot.send_message(chat_id=chat_id, text=message, reply_markup=reply_markup)
+
+    bot.send_message(chat_id=chat_id, 
+                     text=message, 
+                     reply_markup=reply_markup)
+    bot.delete_message(chat_id=query.message.chat_id, 
+                       message_id=query.message.message_id)
 
     return 'HANDLE_CART'
 
@@ -227,6 +225,14 @@ def check_bearer_token():
     curent_time = time.time()
     if curent_time >= bearer_token_time:
         bearer_token, bearer_token_time = get_bearer_access_token(client_id=client_id)
+
+
+def get_menu_keyboard(products):
+    products_keyboard = [
+        [InlineKeyboardButton(product['name'], callback_data=product['id'])] for product in products
+        ]
+    products_keyboard.append([InlineKeyboardButton('Cart', callback_data='cart')])
+    return InlineKeyboardMarkup(products_keyboard)
 
 
 if __name__ == '__main__':
