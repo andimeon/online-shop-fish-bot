@@ -27,7 +27,7 @@ client_secret = env('CLIENT_SECRET_TOKEN')
 
 def start(bot, update):
     query = update.callback_query
-    
+
     if query:
         chat_id = query.message.chat_id
     else:
@@ -37,7 +37,8 @@ def start(bot, update):
     products = get_products_list(bearer_token=bearer_token)
     reply_markup = get_menu_keyboard(products)
     bot.send_message(chat_id=chat_id, text='Please choose:', reply_markup=reply_markup)
-    bot.delete_message(chat_id=chat_id, message_id=query.message.message_id)
+    if query:
+        bot.delete_message(chat_id=chat_id, message_id=query.message.message_id)
     return 'HANDLE_MENU'
 
 
@@ -87,6 +88,8 @@ def handle_description(bot, update):
                         product_id=product_id,
                         quantity=quantity,
                         chat_id=chat_id)
+    message = f'Add {quantity} kg'
+    bot.answer_callback_query(callback_query_id=query.id, text=message)
 
     return 'HANDLE_DESCRIPTION'
 
