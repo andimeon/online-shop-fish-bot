@@ -26,10 +26,18 @@ client_secret = env('CLIENT_SECRET_TOKEN')
 
 
 def start(bot, update):
+    query = update.callback_query
+    
+    if query:
+        chat_id = query.message.chat_id
+    else:
+        chat_id = update.message.chat_id
+
     check_bearer_token()
     products = get_products_list(bearer_token=bearer_token)
     reply_markup = get_menu_keyboard(products)
-    update.message.reply_text('Please choose:', reply_markup=reply_markup)
+    bot.send_message(chat_id=chat_id, text='Please choose:', reply_markup=reply_markup)
+    bot.delete_message(chat_id=chat_id, message_id=query.message.message_id)
     return 'HANDLE_MENU'
 
 
@@ -38,13 +46,6 @@ def handle_menu(bot, update):
 
     query = update.callback_query
     chat_id = query.message.chat_id
-
-    if query.data == 'menu':
-        products = get_products_list(bearer_token=bearer_token)
-        reply_markup = get_menu_keyboard(products)
-        bot.send_message(chat_id=chat_id, text='Please choose:', reply_markup=reply_markup)
-        bot.delete_message(chat_id=chat_id, message_id=query.message.message_id)
-        return 'HANDLE_MENU'
 
     product_id = query.data
     product = get_product_by_id(bearer_token=bearer_token, product_id=product_id)
@@ -151,7 +152,7 @@ def handle_user(bot, update):
         update.message.reply_text('Sorry, but we cannot valid your email. Please try again')
         return 'HANDLE_USER'
 
-    keyboard = [[InlineKeyboardButton('Continue shopping', callback_data='menu')]]
+    keyboard = [[InlineKeyboardButton('Continue shopping', callback_data='start')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     create_customer(bearer_token=bearer_token, 
                     username=user_name,
@@ -181,10 +182,10 @@ def handle_users_reply(bot, update):
         user_state = 'START'
     elif user_reply == 'cart':
         user_state = 'HANDLE_CART'
-    elif user_reply == 'menu':
-        user_state = 'HANDLE_MENU'
     elif user_reply == 'payment':
         user_state = 'WAITING_EMAIL'
+    elif user_reply == 'menu':
+        user_state = 'START'
     else:
         user_state = db.get(chat_id).decode("utf-8")
 
