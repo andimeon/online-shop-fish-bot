@@ -2,7 +2,7 @@ import requests
 import json
 
 
-def _get_access_token(client_id, client_secret):
+def get_access_token(client_id, client_secret):
     data = {
         'client_id': client_id,
         'client_secret': client_secret,
@@ -17,7 +17,7 @@ def _get_access_token(client_id, client_secret):
     return access_response['access_token'], access_response['expires']
 
 
-def _get_bearer_access_token(client_id):
+def get_bearer_access_token(client_id):
     data = {
         'client_id': client_id,
         'grant_type': 'implicit'
