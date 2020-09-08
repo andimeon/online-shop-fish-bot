@@ -1,5 +1,6 @@
 import logging
 from textwrap import dedent
+import time
 
 import redis
 from telegram.ext import Filters, Updater
@@ -8,6 +9,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from environs import Env
 from email_validator import validate_email, EmailNotValidError
 
+from shop_access import _get_bearer_access_token, _get_access_token
 from shop_access import get_products_list, get_product_by_id, get_image_url
 from shop_access import add_product_to_cart, get_cart_items, remove_cart_items
 from shop_access import create_customer
@@ -16,13 +18,17 @@ env = Env()
 env.read_env()
 
 _database = None
+bearer_token_time = 0
+bearer_token = None
 
 client_id = env('CLIENT_ID')
 client_secret = env('CLIENT_SECRET_TOKEN')
 
 
 def start(bot, update):
-    products = get_products_list(client_id=client_id)
+    check_bearer_token()
+    products = get_products_list(bearer_token=bearer_token)
+
     products_keyboard = [[InlineKeyboardButton(product['name'], callback_data=product['id'])] for product in products]
     products_keyboard.append([InlineKeyboardButton('Cart', callback_data='cart')])
     reply_markup = InlineKeyboardMarkup(products_keyboard)
@@ -31,12 +37,15 @@ def start(bot, update):
 
 
 def handle_menu(bot, update):
+    check_bearer_token()
+
     query = update.callback_query
     chat_id = query.message.chat_id
     bot.delete_message(chat_id=chat_id, message_id=query.message.message_id)
 
     if query.data == 'menu':
-        products = get_products_list(client_id=client_id)
+        products = get_products_list(bearer_token=bearer_token)
+
         products_keyboard = [[InlineKeyboardButton(product['name'], callback_data=product['id'])] for product in products]
         products_keyboard.append([InlineKeyboardButton('Cart', callback_data='cart')])
         reply_markup = InlineKeyboardMarkup(products_keyboard)
@@ -45,12 +54,9 @@ def handle_menu(bot, update):
         return 'HANDLE_MENU'
 
     product_id = query.data
-    product = get_product_by_id(client_id=client_id, product_id=product_id)
-    image_id = product['image_id'] 
-    image_url = get_image_url(client_id=client_id, image_id=image_id)
+    product = get_product_by_id(bearer_token=bearer_token, product_id=product_id)
 
     measures = ['1', '2', '5']
-
     product_keyboard = [[InlineKeyboardButton(f'{weight} kg', callback_data=f'{weight},{product_id}') for weight in measures],
                         [InlineKeyboardButton('Cart', callback_data='cart')],
                         [InlineKeyboardButton('Menu', callback_data='menu')],
@@ -66,19 +72,21 @@ def handle_menu(bot, update):
     {product['description']}
     ''')
 
-    bot.send_photo(chat_id=chat_id, photo=image_url,
+    bot.send_photo(chat_id=chat_id, photo=product['image_url'],
                    caption=message, reply_markup=reply_markup)
 
     return 'HANDLE_DESCRIPTION'
 
 
 def handle_description(bot, update):
+    check_bearer_token()
+
     query = update.callback_query
     chat_id = query.message.chat_id
 
     quantity, product_id = query.data.split(',')
 
-    add_product_to_cart(client_id=client_id,
+    add_product_to_cart(bearer_token=bearer_token,
                         product_id=product_id,
                         quantity=quantity,
                         chat_id=chat_id)
@@ -87,6 +95,7 @@ def handle_description(bot, update):
 
 
 def handle_cart(bot, update):
+    check_bearer_token()
     query = update.callback_query
     chat_id = query.message.chat_id
 
@@ -95,13 +104,13 @@ def handle_cart(bot, update):
                            message_id=query.message.message_id)
 
         product_id = query.data.split(',')[1]
-        remove_cart_items(client_id=client_id, 
+        remove_cart_items(bearer_token=bearer_token, 
                           product_id=product_id, 
                           chat_id=chat_id)
 
     message = ''
     cart_keyboard = []
-    cart, total_amount = get_cart_items(client_id=client_id, chat_id=chat_id)
+    cart, total_amount = get_cart_items(bearer_token=bearer_token, chat_id=chat_id)
 
     for product in cart:
         cart_keyboard.append([InlineKeyboardButton(
@@ -133,6 +142,7 @@ def waiting_email(bot, update):
 
 
 def handle_user(bot, update):
+    check_bearer_token()
     user_name = f'{update.effective_user.first_name}_{update.effective_chat.id}'
     shop_password = f'{update.effective_chat.id}'
 
@@ -145,7 +155,7 @@ def handle_user(bot, update):
 
     keyboard = [[InlineKeyboardButton('Continue shopping', callback_data='menu')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    create_customer(client_id=client_id, 
+    create_customer(bearer_token=bearer_token, 
                     username=user_name,
                     email=email,
                     password=shop_password)
@@ -208,6 +218,15 @@ def get_database_connection():
                                 port=database_port,
                                 password=database_password)
     return _database
+
+
+def check_bearer_token():
+    global bearer_token_time
+    global bearer_token
+
+    curent_time = time.time()
+    if curent_time >= bearer_token_time:
+        bearer_token, bearer_token_time = _get_bearer_access_token(client_id=client_id)
 
 
 if __name__ == '__main__':
