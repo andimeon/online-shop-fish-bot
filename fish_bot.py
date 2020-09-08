@@ -9,8 +9,8 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from environs import Env
 from email_validator import validate_email, EmailNotValidError
 
-from shop_access import _get_bearer_access_token, _get_access_token
-from shop_access import get_products_list, get_product_by_id, get_image_url
+from shop_access import get_bearer_access_token
+from shop_access import get_products_list, get_product_by_id
 from shop_access import add_product_to_cart, get_cart_items, remove_cart_items
 from shop_access import create_customer
 
@@ -226,7 +226,7 @@ def check_bearer_token():
 
     curent_time = time.time()
     if curent_time >= bearer_token_time:
-        bearer_token, bearer_token_time = _get_bearer_access_token(client_id=client_id)
+        bearer_token, bearer_token_time = get_bearer_access_token(client_id=client_id)
 
 
 if __name__ == '__main__':
