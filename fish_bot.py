@@ -9,10 +9,10 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from environs import Env
 from email_validator import validate_email, EmailNotValidError
 
-from shop_access import get_bearer_access_token
-from shop_access import get_products_list, get_product_by_id
-from shop_access import add_product_to_cart, get_cart_items, remove_cart_items
-from shop_access import create_customer
+from manage_moltin_shop import get_bearer_access_token
+from manage_moltin_shop import get_products_list, get_product_by_id
+from manage_moltin_shop import add_product_to_cart, get_cart_items, remove_cart_items
+from manage_moltin_shop import create_customer
 
 env = Env()
 env.read_env()
