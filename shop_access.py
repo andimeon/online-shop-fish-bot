@@ -48,7 +48,9 @@ def add_product_to_cart(product_id, bearer_token, quantity, chat_id):
 
     url = f'https://api.moltin.com/v2/carts/{chat_id}/items'
 
-    response = requests.post(url, headers=headers, data=json.dumps(product_data))
+    response = requests.post(url,
+                             headers=headers,
+                             data=json.dumps(product_data))
     response.raise_for_status()
 
 

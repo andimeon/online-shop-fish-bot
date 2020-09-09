@@ -20,7 +20,6 @@ env.read_env()
 _database = None
 bearer_token_time = 0
 bearer_token = None
-
 client_id = env('CLIENT_ID')
 client_secret = env('CLIENT_SECRET_TOKEN')
 
@@ -36,9 +35,12 @@ def start(bot, update):
     check_bearer_token()
     products = get_products_list(bearer_token=bearer_token)
     reply_markup = get_menu_keyboard(products)
-    bot.send_message(chat_id=chat_id, text='Please choose:', reply_markup=reply_markup)
+    bot.send_message(chat_id=chat_id, text='Please choose:',
+                     reply_markup=reply_markup)
     if query:
-        bot.delete_message(chat_id=chat_id, message_id=query.message.message_id)
+        bot.delete_message(chat_id=chat_id, 
+                           message_id=query.message.message_id)
+
     return 'HANDLE_MENU'
 
 
@@ -49,7 +51,8 @@ def handle_menu(bot, update):
     chat_id = query.message.chat_id
 
     product_id = query.data
-    product = get_product_by_id(bearer_token=bearer_token, product_id=product_id)
+    product = get_product_by_id(bearer_token=bearer_token,
+                                product_id=product_id)
 
     measures = ['1', '2', '5']
     product_keyboard = [
@@ -107,7 +110,8 @@ def handle_cart(bot, update):
 
     message = ''
     cart_keyboard = []
-    cart, total_amount = get_cart_items(bearer_token=bearer_token, chat_id=chat_id)
+    cart, total_amount = get_cart_items(bearer_token=bearer_token, 
+                                        chat_id=chat_id)
 
     for product in cart:
         cart_keyboard.append([InlineKeyboardButton(
@@ -138,7 +142,8 @@ def handle_cart(bot, update):
 
 def waiting_email(bot, update):
     query = update.callback_query
-    bot.send_message(chat_id=query.message.chat_id, text='Please send your email')
+    bot.send_message(chat_id=query.message.chat_id, 
+                     text='Please send your email')
 
     return 'HANDLE_USER'
 
